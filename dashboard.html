@@ -1,0 +1,86 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard — Thư viện</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="brand"><i class="bi bi-book-half"></i> Thư viện</a>
+        <a href="index.html" class="nav-link"><i class="bi bi-grid-3x3-gap"></i> Danh sách sách</a>
+        <a href="muon.html" class="nav-link"><i class="bi bi-plus-circle"></i> Tạo phiếu mượn</a>
+        <a href="lichsu.html" class="nav-link"><i class="bi bi-clock-history"></i> Lịch sử</a>
+        <a href="dashboard.html" class="nav-link active"><i class="bi bi-bar-chart-line"></i> Dashboard</a>
+    </nav>
+
+    <div class="page-header">
+        <div class="container">
+            <h2><i class="bi bi-bar-chart-line"></i> Dashboard</h2>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="bi bi-trophy"></i> <span id="chartTitle">Top 5 sách mượn nhiều nhất</span></h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="chart" height="80"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="api.js"></script>
+    <script>
+        async function loadChart() {
+            const now = new Date();
+            const thang = now.getMonth() + 1;
+            const nam = now.getFullYear();
+            document.getElementById('chartTitle').textContent = `Top 5 sách mượn nhiều nhất — Tháng ${thang}/${nam}`;
+            const data = await api.get('/dashboard/top5sach');
+            if (!data || data.length === 0) {
+                document.getElementById('chart').closest('.card-body').innerHTML =
+                    '<div class="empty-state"><i class="bi bi-bar-chart"></i><p>Chưa có dữ liệu tháng này</p></div>';
+                return;
+            }
+            new Chart(document.getElementById('chart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: data.map(x => x.tenSach),
+                    datasets: [{
+                        label: 'Lượt mượn',
+                        data: data.map(x => x.soLanMuon),
+                        backgroundColor: ['#1e3a5f', '#2a5298', '#3b6fd4', '#6093e0', '#93b8ec'],
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ` ${ctx.raw} lượt mượn`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f0f3f9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+        loadChart();
+    </script>
+</body>
+</html>

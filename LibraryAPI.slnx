@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Frontend/">
+    <File Path="api.js" />
+    <File Path="dashboard.html" />
+    <File Path="index.html" />
+    <File Path="lichsu.html" />
+    <File Path="muon.html" />
+    <File Path="style.css" />
+  </Folder>
+  <Project Path="LibraryAPI/LibraryAPI.csproj" />
+</Solution>

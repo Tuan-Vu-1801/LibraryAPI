@@ -1,0 +1,110 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Lịch sử mượn trả — Thư viện</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="brand"><i class="bi bi-book-half"></i> Thư viện</a>
+        <a href="index.html" class="nav-link"><i class="bi bi-grid-3x3-gap"></i> Danh sách sách</a>
+        <a href="muon.html" class="nav-link"><i class="bi bi-plus-circle"></i> Tạo phiếu mượn</a>
+        <a href="lichsu.html" class="nav-link active"><i class="bi bi-clock-history"></i> Lịch sử</a>
+        <a href="dashboard.html" class="nav-link"><i class="bi bi-bar-chart-line"></i> Dashboard</a>
+    </nav>
+
+    <div class="page-header">
+        <div class="container">
+            <h2><i class="bi bi-clock-history"></i> Lịch sử mượn trả</h2>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+
+            <div id="alertBox" class="alert"></div>
+
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mã phiếu</th>
+                            <th>Sinh viên</th>
+                            <th>Ngày mượn</th>
+                            <th>Hạn trả</th>
+                            <th>Ngày trả</th>
+                            <th>Trạng thái</th>
+                            <th style="text-align:right">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableLichSu"></tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+    <script>
+        async function loadLichSu() {
+            const list = await api.get('/phieumuon');
+            const tbody = document.getElementById('tableLichSu');
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><i class="bi bi-inbox"></i><p>Chưa có phiếu mượn nào</p></div></td></tr>`;
+                return;
+            }
+            tbody.innerHTML = list.map(p => {
+                const laTre = p.trangThai === 'DangMuon' && new Date() > new Date(p.ngayHenTra);
+                const badge = p.trangThai === 'DaTra'
+                    ? '<span class="badge badge-success"><i class="bi bi-check-circle"></i> Đã trả</span>'
+                    : laTre
+                        ? '<span class="badge badge-danger"><i class="bi bi-exclamation-circle"></i> Quá hạn</span>'
+                        : '<span class="badge badge-warning"><i class="bi bi-hourglass-split"></i> Đang mượn</span>';
+                const btnTra = p.trangThai !== 'DaTra'
+                    ? `<button class="btn btn-primary btn-sm" onclick="traSach(${p.maPhieu})"><i class="bi bi-arrow-return-left"></i> Trả sách</button>`
+                    : '<span style="color:#94a3b8;font-size:13px">—</span>';
+                return `<tr id="row-${p.maPhieu}">
+                <td><span style="font-family:monospace;font-size:12px;background:#f1f5f9;padding:2px 8px;border-radius:4px">#${p.maPhieu}</span></td>
+                <td><strong>${p.sinhVien?.hoTen ?? p.maSV}</strong></td>
+                <td style="color:#64748b">${formatDate(p.ngayMuon)}</td>
+                <td style="color:#64748b">${formatDate(p.ngayHenTra)}</td>
+                <td style="color:#64748b">${p.ngayTra ? formatDate(p.ngayTra) : '—'}</td>
+                <td>${badge}</td>
+                <td style="text-align:right">${btnTra}</td>
+            </tr>`;
+            }).join('');
+        }
+
+        async function traSach(maPhieu) {
+            if (!confirm(`Xác nhận trả sách cho phiếu #${maPhieu}?`)) return;
+            const res = await api.put(`/phieumuon/${maPhieu}/tra`);
+            if (res.ok) {
+                const data = await res.json();
+                showAlert(data.treHan ? 'Trả trễ hạn — đã sinh phiếu phạt!' : 'Trả sách thành công!', data.treHan ? 'danger' : 'success');
+                loadLichSu();
+            } else {
+                const err = await res.json();
+                showAlert(err.message || 'Lỗi không xác định', 'danger');
+            }
+        }
+
+        function formatDate(d) {
+            if (!d) return '—';
+            return new Date(d).toLocaleDateString('vi-VN');
+        }
+
+        function showAlert(msg, type) {
+            const box = document.getElementById('alertBox');
+            box.className = `alert alert-${type}`;
+            box.innerHTML = `<i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${msg}`;
+            box.style.display = 'flex';
+            setTimeout(() => box.style.display = 'none', 5000);
+        }
+
+        loadLichSu();
+    </script>
+</body>
+</html>
