@@ -79,7 +79,7 @@ namespace LibraryAPI.Controllers
             await _context.SaveChangesAsync();
             return Ok(existing);
         }
-
+        // Add advand crud - your task
         // DELETE /api/sinhvien/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(string id)
