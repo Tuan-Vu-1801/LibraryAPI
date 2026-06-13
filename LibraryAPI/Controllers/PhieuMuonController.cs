@@ -221,7 +221,7 @@ namespace LibraryAPI.Controllers
         public DateTime NgayHenTra { get; set; }
         public List<ChiTietRequest> ChiTiets { get; set; } = new();
     }
-
+    // Book management: add, edit, delete, search
     public class ChiTietRequest
     {
         public string MaSach { get; set; } = null!;
